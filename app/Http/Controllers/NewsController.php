@@ -8,6 +8,7 @@ use App\Jobs\SendNotification;
 use App\Models\News;
 use App\Models\User;
 use Carbon\Carbon;
+use ErrorException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
@@ -51,10 +52,11 @@ class NewsController extends Controller
     {
         try {
             // Fetch RSS feed data
-            $response = Http::get('https://rss.punchng.com/v1/category/latest_new');
+            $response = Http::get('https://rss.punchng.com/v1/category/latest_news');
             if ($response->status() !== 200) {
                 throw new RuntimeException('Failed to fetch RSS feed');
             }
+            $count = 0;
             $xml = $response->body();
             $xmlObject = $this->parseXML($xml);      
             foreach ($xmlObject['channel']['item'] as $item) {
@@ -70,12 +72,13 @@ class NewsController extends Controller
                 if (! $existingArticle) {
                     $news = $this->store($data);
                     SendNotification::dispatch($news);
+                    $count ++;
                 }
             }        
+            flash()->addSuccess("$count news articles added");
         } catch (\Throwable $error) {
             report($error->getMessage());
         }
-        notify()->success('Welcome to Laravel Notify ⚡️');
         return Redirect::route('home');
     }    
 
@@ -84,7 +87,7 @@ class NewsController extends Controller
     {
         $simpleXml = simplexml_load_string($xml);
         if ($simpleXml === false) {
-            throw new InvalidArgumentException('Invalid XML string provided');
+            throw new ErrorException('Invalid XML string provided');
         }
         $xmlObject = simplexml_load_string($xml);
         $json = json_encode($xmlObject);

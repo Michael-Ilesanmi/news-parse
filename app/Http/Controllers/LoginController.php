@@ -45,6 +45,7 @@ class LoginController extends Controller
         }, 60);
     
         if ($limiter->tooManyAttempts('login:'.$credentials['email'], 5)) {
+            flash()->addError('Too many login attempts. Please try again later.');
             return back()->withErrors([
                 'email' => 'Too many login attempts. Please try again later.',
             ])->onlyInput('email');
@@ -52,10 +53,12 @@ class LoginController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             $limiter->clear('login:'.$credentials['email']);
+            flash()->addSuccess('Login Successfull');
             return redirect()->intended('/');
         }
 
         $limiter->hit('login:'.$credentials['email']);
+        flash()->addError('The provided credentials do not match our records.');
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');  

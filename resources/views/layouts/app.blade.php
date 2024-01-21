@@ -7,8 +7,7 @@
         <title>NEWS APP - @yield('title')</title>
 
         <!-- Styles -->
-        @notifyCss
-        @vite('resources/css/app.css')
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="h-full w-full">
         <nav class="px-8 py-4 border-b-2 flex justify-between items-center">
@@ -20,7 +19,5 @@
         <div class="w-full pt-12 container">
             @yield('content')
         </div>
-        <x:notify-messages />
-        @notifyJs
     </body>
 </html>
